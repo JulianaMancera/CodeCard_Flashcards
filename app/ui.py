@@ -1,28 +1,10 @@
-import json
-import random
-import time
-import os
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, 
-                             QTableWidget, QTableWidgetItem, QDialog, QLineEdit, QLabel, 
-                             QHBoxLayout, QMessageBox, QInputDialog, QStackedWidget, QTextEdit)
+from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, 
+                             QTableWidget, QTableWidgetItem, QDialog, QLineEdit, 
+                             QTextEdit, QMessageBox, QInputDialog)
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QFont
-import sys
-
-# File to store flashcards and stats
-DATA_FILE = "flashcards.json"
-
-def load_data():
-    """Load flashcards and stats from JSON file."""
-    if os.path.exists(DATA_FILE):
-        with open(DATA_FILE, 'r') as f:
-            return json.load(f)
-    return {"flashcards": [], "stats": {"correct": 0, "total": 0}}
-
-def save_data(data):
-    """Save flashcards and stats to JSON file."""
-    with open(DATA_FILE, 'w') as f:
-        json.dump(data, f, indent=4)
+import random
+import time
 
 class InstructionsDialog(QDialog):
     """Dialog for displaying instructions."""
@@ -31,14 +13,14 @@ class InstructionsDialog(QDialog):
         self.setWindowTitle("Instructions")
         self.setFixedSize(400, 300)
         layout = QVBoxLayout()
-        
+
         instructions = QTextEdit()
         instructions.setReadOnly(True)
-        instructions.setText(
-            "<h2>Welcome to Flashcard Quiz App!</h2>"
-            "<p>This app helps you create, manage, and test your knowledge with flashcards.</p>"
-            "<p><b>How to Use:</b></p>"
-            "<ul>"
+        instructions.setHtml(
+            "<h2 style='color: #2f4f4f;'>Welcome to Flashcard Quiz App!</h2>"
+            "<p style='color: #333;'>This app helps you create, manage, and test your knowledge with flashcards.</p>"
+            "<p style='color: #333;'><b>How to Use:</b></p>"
+            "<ul style='color: #333;'>"
             "<li><b>Add Flashcard:</b> Create new flashcards with questions and answers.</li>"
             "<li><b>Edit/Delete:</b> Modify or remove existing flashcards.</li>"
             "<li><b>List Flashcards:</b> View all flashcards in a table.</li>"
@@ -46,17 +28,18 @@ class InstructionsDialog(QDialog):
             "<li><b>Timed Quiz:</b> Answer questions within a time limit per question.</li>"
             "<li><b>Stats:</b> Track your correct answers and overall performance.</li>"
             "</ul>"
-            "<p>Click OK to close this window.</p>"
+            "<p style='color: #333;'>Click OK to close this window.</p>"
         )
-        instructions.setStyleSheet("background-color: #f9f9f9; border: 1px solid #ccc; padding: 10px;")
+        instructions.setStyleSheet("background-color: #f5faff; border: 1px solid #b0c4de; padding: 10px; border-radius: 5px;")
         layout.addWidget(instructions)
-        
+
         ok_button = QPushButton("OK")
         ok_button.clicked.connect(self.accept)
-        ok_button.setStyleSheet("background-color: #4CAF50; color: white; padding: 8px; border-radius: 5px;")
+        ok_button.setStyleSheet("background-color: #4682b4; color: white; padding: 10px; border-radius: 5px; font-size: 14px;")
         layout.addWidget(ok_button)
-        
+
         self.setLayout(layout)
+        self.setStyleSheet("background-color: #e6f3fa;")
 
 class FlashcardDialog(QDialog):
     """Dialog for adding/editing flashcards."""
@@ -65,32 +48,32 @@ class FlashcardDialog(QDialog):
         self.setWindowTitle("Edit Flashcard" if edit_mode else "Add Flashcard")
         self.setFixedSize(350, 200)
         layout = QVBoxLayout()
-        
-        layout.addWidget(QLabel("Question:"))
+
+        layout.addWidget(QLabel("Question:", styleSheet="color: #2f4f4f; font-weight: bold;"))
         self.question_input = QLineEdit(question)
         self.question_input.setPlaceholderText("Enter question")
-        self.question_input.setStyleSheet("padding: 5px; border: 1px solid #ccc; border-radius: 5px;")
+        self.question_input.setStyleSheet("padding: 8px; border: 1px solid #b0c4de; border-radius: 5px; background-color: #fff;")
         layout.addWidget(self.question_input)
-        
-        layout.addWidget(QLabel("Answer:"))
+
+        layout.addWidget(QLabel("Answer:", styleSheet="color: #2f4f4f; font-weight: bold;"))
         self.answer_input = QLineEdit(answer)
         self.answer_input.setPlaceholderText("Enter answer")
-        self.answer_input.setStyleSheet("padding: 5px; border: 1px solid #ccc; border-radius: 5px;")
+        self.answer_input.setStyleSheet("padding: 8px; border: 1px solid #b0c4de; border-radius: 5px; background-color: #fff;")
         layout.addWidget(self.answer_input)
-        
+
         button_layout = QHBoxLayout()
         self.ok_button = QPushButton("OK")
         self.ok_button.clicked.connect(self.accept)
-        self.ok_button.setStyleSheet("background-color: #4CAF50; color: white; padding: 8px; border-radius: 5px;")
+        self.ok_button.setStyleSheet("background-color: #4682b4; color: white; padding: 10px; border-radius: 5px; font-size: 14px;")
         self.cancel_button = QPushButton("Cancel")
         self.cancel_button.clicked.connect(self.reject)
-        self.cancel_button.setStyleSheet("background-color: #f44336; color: white; padding: 8px; border-radius: 5px;")
+        self.cancel_button.setStyleSheet("background-color: #dc143c; color: white; padding: 10px; border-radius: 5px; font-size: 14px;")
         button_layout.addWidget(self.ok_button)
         button_layout.addWidget(self.cancel_button)
         layout.addLayout(button_layout)
-        
+
         self.setLayout(layout)
-        self.setStyleSheet("background-color: #ffffff;")
+        self.setStyleSheet("background-color: #e6f3fa;")
 
     def get_data(self):
         return self.question_input.text().strip(), self.answer_input.text().strip()
@@ -107,35 +90,36 @@ class QuizDialog(QDialog):
         self.current_card = 0
         self.correct = 0
         self.start_time = time.time()
-        
+
         self.layout = QVBoxLayout()
         self.question_label = QLabel("")
         self.question_label.setFont(QFont("Arial", 12, QFont.Bold))
         self.question_label.setWordWrap(True)
+        self.question_label.setStyleSheet("color: #2f4f4f; padding: 10px;")
         self.layout.addWidget(self.question_label)
-        
+
         self.answer_input = QLineEdit()
         self.answer_input.setPlaceholderText("Enter your answer")
-        self.answer_input.setStyleSheet("padding: 8px; border: 1px solid #ccc; border-radius: 5px;")
+        self.answer_input.setStyleSheet("padding: 8px; border: 1px solid #b0c4de; border-radius: 5px; background-color: #fff;")
         self.layout.addWidget(self.answer_input)
-        
+
         self.submit_button = QPushButton("Submit")
         self.submit_button.clicked.connect(self.check_answer)
-        self.submit_button.setStyleSheet("background-color: #2196F3; color: white; padding: 8px; border-radius: 5px;")
+        self.submit_button.setStyleSheet("background-color: #4682b4; color: white; padding: 10px; border-radius: 5px; font-size: 14px;")
         self.layout.addWidget(self.submit_button)
-        
+
         self.feedback_label = QLabel("")
-        self.feedback_label.setStyleSheet("color: #333; font-style: italic;")
+        self.feedback_label.setStyleSheet("color: #333; font-style: italic; padding: 5px;")
         self.layout.addWidget(self.feedback_label)
-        
+
         if timed:
             self.timer_label = QLabel(f"Time left: {time_limit}s")
-            self.timer_label.setStyleSheet("color: #e67e22; font-weight: bold;")
+            self.timer_label.setStyleSheet("color: #ff4500; font-weight: bold; padding: 5px;")
             self.layout.addWidget(self.timer_label)
             self.update_timer()
-        
+
         self.setLayout(self.layout)
-        self.setStyleSheet("background-color: #ffffff;")
+        self.setStyleSheet("background-color: #e6f3fa;")
         self.next_question()
 
     def update_timer(self):
@@ -192,130 +176,103 @@ class LandingPage(QWidget):
         super().__init__(parent)
         self.parent = parent
         layout = QVBoxLayout()
-        
+
         welcome_label = QLabel("Welcome to Flashcard Quiz App!")
         welcome_label.setFont(QFont("Arial", 18, QFont.Bold))
         welcome_label.setAlignment(Qt.AlignCenter)
+        welcome_label.setStyleSheet("color: #2f4f4f; margin: 20px;")
         layout.addWidget(welcome_label)
-        
-        intro_label = QLabel("Test your knowledge with custom flashcards.\nCreate, edit, and quiz yourself in normal or timed modes!")
+
+        intro_label = QLabel("Test your knowledge with custom flashcards.\nCreate, edit, and quiz yourself in either normal or timed modes!")
         intro_label.setFont(QFont("Arial", 12))
         intro_label.setAlignment(Qt.AlignCenter)
-        intro_label.setStyleSheet("color: #555; margin: 10px;")
+        intro_label.setStyleSheet("color: #333; margin: 10px 20px;")
         layout.addWidget(intro_label)
-        
+
         start_button = QPushButton("Start App")
         start_button.clicked.connect(self.parent.show_main)
-        start_button.setStyleSheet("background-color: #4CAF50; color: white; padding: 10px; border-radius: 5px; font-size: 14px;")
+        start_button.setStyleSheet("background-color: #4682b4; color: white; padding: 12px; border-radius: 5px; font-size: 14px; margin: 10px;")
         layout.addWidget(start_button)
-        
+
         instructions_button = QPushButton("View Instructions")
         instructions_button.clicked.connect(self.show_instructions)
-        instructions_button.setStyleSheet("background-color: #2196F3; color: white; padding: 10px; border-radius: 5px; font-size: 14px;")
+        instructions_button.setStyleSheet("background-color: #5f9ea0; color: white; padding: 12px; border-radius: 5px; font-size: 14px; margin: 10px;")
         layout.addWidget(instructions_button)
-        
+
         layout.addStretch()
         self.setLayout(layout)
-        self.setStyleSheet("background-color: #f0f4f8;")
+        self.setStyleSheet("background-color: #e6f3fa;")
 
     def show_instructions(self):
         dialog = InstructionsDialog(self)
         dialog.exec_()
 
-class MainWindow(QMainWindow):
-    """Main application window with landing page and main content."""
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("Flashcard Quiz App")
-        self.setFixedSize(600, 500)
-        self.data = load_data()
-        
-        # Stacked widget for landing and main pages
-        self.stacked_widget = QStackedWidget()
-        self.setCentralWidget(self.stacked_widget)
-        
-        # Landing page
-        self.landing_page = LandingPage(self)
-        self.stacked_widget.addWidget(self.landing_page)
-        
-        # Main content widget
-        self.main_widget = QWidget()
-        self.main_layout = QVBoxLayout(self.main_widget)
-        
-        # Buttons
+class MainContent(QWidget):
+    """Main content widget with flashcard management and quiz controls."""
+    def __init__(self, parent=None, data=None):
+        super().__init__(parent)
+        self.parent = parent
+        self.data = data
+        layout = QVBoxLayout()
+
+        # Buttons layout
         button_layout = QHBoxLayout()
         self.add_button = QPushButton("Add Flashcard")
         self.add_button.clicked.connect(self.add_flashcard)
-        self.add_button.setStyleSheet("background-color: #4CAF50; color: white; padding: 8px; border-radius: 5px;")
+        self.add_button.setStyleSheet("background-color: #4682b4; color: white; padding: 10px; border-radius: 5px; font-size: 14px;")
         button_layout.addWidget(self.add_button)
-        
+
         self.edit_button = QPushButton("Edit Flashcard")
         self.edit_button.clicked.connect(self.edit_flashcard)
-        self.edit_button.setStyleSheet("background-color: #2196F3; color: white; padding: 8px; border-radius: 5px;")
+        self.edit_button.setStyleSheet("background-color: #5f9ea0; color: white; padding: 10px; border-radius: 5px; font-size: 14px;")
         button_layout.addWidget(self.edit_button)
-        
+
         self.delete_button = QPushButton("Delete Flashcard")
         self.delete_button.clicked.connect(self.delete_flashcard)
-        self.delete_button.setStyleSheet("background-color: #f44336; color: white; padding: 8px; border-radius: 5px;")
+        self.delete_button.setStyleSheet("background-color: #dc143c; color: white; padding: 10px; border-radius: 5px; font-size: 14px;")
         button_layout.addWidget(self.delete_button)
-        
-        self.main_layout.addLayout(button_layout)
-        
+        layout.addLayout(button_layout)
+
         self.list_button = QPushButton("List Flashcards")
         self.list_button.clicked.connect(self.list_flashcards)
-        self.list_button.setStyleSheet("background-color: #ff9800; color: white; padding: 8px; border-radius: 5px;")
-        self.main_layout.addWidget(self.list_button)
-        
+        self.list_button.setStyleSheet("background-color: #ff8c00; color: white; padding: 10px; border-radius: 5px; font-size: 14px; margin: 5px;")
+        layout.addWidget(self.list_button)
+
         self.quiz_button = QPushButton("Start Quiz")
         self.quiz_button.clicked.connect(lambda: self.start_quiz(timed=False))
-        self.quiz_button.setStyleSheet("background-color: #4CAF50; color: white; padding: 8px; border-radius: 5px;")
-        self.main_layout.addWidget(self.quiz_button)
-        
+        self.quiz_button.setStyleSheet("background-color: #4682b4; color: white; padding: 10px; border-radius: 5px; font-size: 14px; margin: 5px;")
+        layout.addWidget(self.quiz_button)
+
         self.timed_quiz_button = QPushButton("Start Timed Quiz")
         self.timed_quiz_button.clicked.connect(lambda: self.start_quiz(timed=True))
-        self.timed_quiz_button.setStyleSheet("background-color: #2196F3; color: white; padding: 8px; border-radius: 5px;")
-        self.main_layout.addWidget(self.timed_quiz_button)
-        
+        self.timed_quiz_button.setStyleSheet("background-color: #5f9ea0; color: white; padding: 10px; border-radius: 5px; font-size: 14px; margin: 5px;")
+        layout.addWidget(self.timed_quiz_button)
+
         self.instructions_button = QPushButton("Instructions")
         self.instructions_button.clicked.connect(self.show_instructions)
-        self.instructions_button.setStyleSheet("background-color: #607d8b; color: white; padding: 8px; border-radius: 5px;")
-        self.main_layout.addWidget(self.instructions_button)
-        
+        self.instructions_button.setStyleSheet("background-color: #708090; color: white; padding: 10px; border-radius: 5px; font-size: 14px; margin: 5px;")
+        layout.addWidget(self.instructions_button)
+
         self.exit_button = QPushButton("Exit")
-        self.exit_button.clicked.connect(self.close)
-        self.exit_button.setStyleSheet("background-color: #f44336; color: white; padding: 8px; border-radius: 5px;")
-        self.main_layout.addWidget(self.exit_button)
-        
+        self.exit_button.clicked.connect(self.parent.close)
+        self.exit_button.setStyleSheet("background-color: #dc143c; color: white; padding: 10px; border-radius: 5px; font-size: 14px; margin: 5px;")
+        layout.addWidget(self.exit_button)
+
         # Table for flashcards
         self.table = QTableWidget()
         self.table.setColumnCount(2)
         self.table.setHorizontalHeaderLabels(["Question", "Answer"])
         self.table.horizontalHeader().setStretchLastSection(True)
-        self.table.setStyleSheet("border: 1px solid #ccc; background-color: #ffffff;")
-        self.main_layout.addWidget(self.table)
-        
+        self.table.setStyleSheet("border: 1px solid #b0c4de; background-color: #fff; margin: 10px;")
+        layout.addWidget(self.table)
+
         # Stats label
         self.stats_label = QLabel("")
-        self.stats_label.setStyleSheet("font-weight: bold; color: #333;")
-        self.main_layout.addWidget(self.stats_label)
+        self.stats_label.setStyleSheet("font-weight: bold; color: #2f4f4f; margin: 10px;")
+        layout.addWidget(self.stats_label)
         self.update_stats()
-        
-        self.stacked_widget.addWidget(self.main_widget)
-        self.stacked_widget.setCurrentWidget(self.landing_page)
-        
-        # Global stylesheet
-        self.setStyleSheet("""
-            QPushButton:hover { background-color: #555; }
-            QTableWidget { gridline-color: #ccc; }
-            QMainWindow { background-color: #f0f4f8; }
-        """)
 
-    def show_main(self):
-        self.stacked_widget.setCurrentWidget(self.main_widget)
-
-    def show_instructions(self):
-        dialog = InstructionsDialog(self)
-        dialog.exec_()
+        self.setLayout(layout)
 
     def update_stats(self):
         stats = self.data["stats"]
@@ -328,7 +285,7 @@ class MainWindow(QMainWindow):
             question, answer = dialog.get_data()
             if question and answer:
                 self.data["flashcards"].append({"question": question, "answer": answer})
-                save_data(self.data)
+                self.parent.save_data()
                 QMessageBox.information(self, "Success", "Flashcard added successfully!")
             else:
                 QMessageBox.warning(self, "Error", "Question and answer cannot be empty.")
@@ -349,7 +306,7 @@ class MainWindow(QMainWindow):
                     self.data["flashcards"][index]["question"] = question
                 if answer:
                     self.data["flashcards"][index]["answer"] = answer
-                save_data(self.data)
+                self.parent.save_data()
                 QMessageBox.information(self, "Success", "Flashcard updated successfully!")
 
     def delete_flashcard(self):
@@ -360,7 +317,7 @@ class MainWindow(QMainWindow):
         index, ok = QInputDialog.getInt(self, "Delete Flashcard", "Enter flashcard number to delete:", 1, 1, len(self.data["flashcards"]))
         if ok:
             self.data["flashcards"].pop(index - 1)
-            save_data(self.data)
+            self.parent.save_data()
             QMessageBox.information(self, "Success", "Flashcard deleted successfully!")
             self.list_flashcards()
 
@@ -385,11 +342,9 @@ class MainWindow(QMainWindow):
         dialog.exec_()
         self.data["stats"]["correct"] += dialog.correct
         self.data["stats"]["total"] += len(cards)
-        save_data(self.data)
+        self.parent.save_data()
         self.update_stats()
 
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-    sys.exit(app.exec_())
+    def show_instructions(self):
+        dialog = InstructionsDialog(self)
+        dialog.exec_()

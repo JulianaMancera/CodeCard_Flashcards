@@ -1,8 +1,32 @@
 {
     "flashcards": [
         {
-            "question": "What is the name of the planet that closet to the sun?",
-            "answer": "Mercury"
+            "question": "What is the term for a function calling itself?",
+            "answer": "Recursion"
+        },
+        {
+            "question": "What is the keyword used to define a class in Python?",
+            "answer": "class"
+        },
+        {
+            "question": "What does OOP stand for?",
+            "answer": "Object-Oriented Programming"
+        },
+        {
+            "question": "What data structure uses LIFO?",
+            "answer": "Stack"
+        },
+        {
+            "question": "Which language is known for web development and runs in browsers?",
+            "answer": "Javascript"
+        },
+        {
+            "question": "Which SQL command is used to retrieve data from a database?",
+            "answer": "SELECT"
+        },
+        {
+            "question": "What keyword in Java is used to inherit a class?",
+            "answer": "extends"
         }
     ],
     "stats": {
