@@ -30,7 +30,7 @@ class FlashcardApp(QMainWindow):
         """Set up UI components."""
         # Window size and position
         screen = QDesktopWidget().screenGeometry()
-        self.resize(int(screen.width() * APP_CONFIG["scale"]), int(screen.height() * APP_CONFIG["scale"]))
+        self.resize(800, 600)  # Set fixed size (width: 800px, height: 600px)
         self.move((screen.width() - self.width()) // 2, (screen.height() - self.height()) // 2)
 
         # Splash screen
