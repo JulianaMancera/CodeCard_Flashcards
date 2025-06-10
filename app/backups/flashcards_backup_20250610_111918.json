@@ -1,0 +1,28 @@
+{
+    "flashcards": [
+        {
+            "question": "What is the capital of France?",
+            "answer": "Paris"
+        },
+        {
+            "question": "What is 2 + 2?",
+            "answer": "4"
+        },
+        {
+            "question": "What programming language is this app written in?",
+            "answer": "Python"
+        }
+    ],
+    "stats": {
+        "correct": 0,
+        "total": 0
+    },
+    "settings": {
+        "default_time_limit": 10,
+        "auto_save": true,
+        "sound_enabled": true
+    },
+    "version": "2.1",
+    "created": "2025-06-10T11:19:13.975357",
+    "last_modified": "2025-06-10T11:19:13.975357"
+}

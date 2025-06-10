@@ -9,70 +9,8 @@ from PyQt5.QtWidgets import QGraphicsOpacityEffect
 import random
 import time
 import os
-
-class AnimatedButton(QPushButton):
-    """Custom animated button with modern styling."""
-    def __init__(self, text, color_scheme="blue"):
-        super().__init__(text)
-        self.color_schemes = {
-            "blue": {"normal": "#2563eb", "hover": "#1d4ed8", "pressed": "#1e40af"},
-            "green": {"normal": "#16a34a", "hover": "#15803d", "pressed": "#166534"},
-            "red": {"normal": "#dc2626", "hover": "#b91c1c", "pressed": "#991b1b"},
-            "orange": {"normal": "#f97316", "hover": "#ea580c", "pressed": "#c2410c"},
-            "purple": {"normal": "#7c3aed", "hover": "#6d28d9", "pressed": "#5b21b6"},
-            "teal": {"normal": "#14b8a6", "hover": "#0d9488", "pressed": "#0f766e"}
-        }
-        self.scheme = self.color_schemes.get(color_scheme, self.color_schemes["blue"])
-        self.setup_style()
-        self.setup_animation()
-
-    def setup_style(self):
-        self.setStyleSheet(f"""
-            QPushButton {{
-                background: {self.scheme['normal']};
-                color: white;
-                border: none;
-                border-radius: 8px;
-                padding: 12px 24px;
-                font-family: 'Inter', 'Segoe UI', 'Arial', sans-serif;
-                font-size: 14px;
-                font-weight: 600;
-                min-height: 40px;
-            }}
-            QPushButton:hover {{
-                background: {self.scheme['hover']};
-            }}
-            QPushButton:pressed {{
-                background: {self.scheme['pressed']};
-            }}
-            QPushButton:focus {{
-                outline: 2px solid #2563eb;
-                outline-offset: 2px;
-            }}
-        """)
-
-    def setup_animation(self):
-        self.animation = QPropertyAnimation(self, b"geometry")
-        self.animation.setDuration(150)
-        self.animation.setEasingCurve(QEasingCurve.OutQuad)
-
-    def enterEvent(self, event):
-        self.animate_scale(1.03)
-        super().enterEvent(event)
-
-    def leaveEvent(self, event):
-        self.animate_scale(1.0)
-        super().leaveEvent(event)
-
-    def animate_scale(self, scale):
-        rect = self.geometry()
-        new_width = int(rect.width() * scale)
-        new_height = int(rect.height() * scale)
-        new_x = rect.x() - (new_width - rect.width()) // 2
-        new_y = rect.y() - (new_height - rect.height()) // 2
-        self.animation.setStartValue(rect)
-        self.animation.setEndValue(QRect(new_x, new_y, new_width, new_height))
-        self.animation.start()
+from admin_panel import AdminPanel
+from utils import AnimatedButton, FlashcardDialog
 
 class FadeInWidget(QWidget):
     """Widget with fade-in animation."""
@@ -208,144 +146,6 @@ class SettingsDialog(QDialog):
         except ValueError:
             QMessageBox.warning(self, "Invalid Input", "Please enter a valid number for time limit.")
 
-class AdminPanel(QDialog):
-    """Modern admin panel for flashcard management."""
-    def __init__(self, parent=None, data=None):
-        super().__init__(parent)
-        self.setWindowTitle("Admin Panel")
-        self.resize(900, 650)
-        self.data = data
-        self.parent_app = parent
-        
-        layout = QVBoxLayout()
-        layout.setSpacing(12)
-        layout.setContentsMargins(20, 20, 20, 20)
-        
-        header = QLabel("📚 Flashcard Management")
-        header.setFont(QFont("Inter", 20, QFont.Bold))
-        header.setAlignment(Qt.AlignCenter)
-        header.setStyleSheet("""
-            color: white;
-            background: #2563eb;
-            padding: 15px;
-            border-radius: 8px;
-        """)
-        layout.addWidget(header)
-        
-        button_frame = QFrame()
-        button_layout = QHBoxLayout(button_frame)
-        button_layout.setSpacing(10)
-        
-        self.add_button = AnimatedButton("➕ Add", "green")
-        self.add_button.clicked.connect(self.add_flashcard)
-        self.edit_button = AnimatedButton("✏️ Edit", "orange")
-        self.edit_button.clicked.connect(self.edit_flashcard)
-        self.delete_button = AnimatedButton("🗑️ Delete", "red")
-        self.delete_button.clicked.connect(self.delete_flashcard)
-        self.refresh_button = AnimatedButton("🔄 Refresh", "purple")
-        self.refresh_button.clicked.connect(self.refresh_table)
-        
-        button_layout.addWidget(self.add_button)
-        button_layout.addWidget(self.edit_button)
-        button_layout.addWidget(self.delete_button)
-        button_layout.addWidget(self.refresh_button)
-        layout.addWidget(button_frame)
-        
-        self.table = QTableWidget()
-        self.table.setColumnCount(3)
-        self.table.setHorizontalHeaderLabels(["#", "Question", "Answer"])
-        self.table.horizontalHeader().setStretchLastSection(True)
-        self.table.setStyleSheet("""
-            QTableWidget {
-                background: white;
-                border: 2px solid #d1d9e6;
-                border-radius: 8px;
-                gridline-color: #e5e7eb;
-                font-size: 14px;
-            }
-            QTableWidget::item {
-                padding: 12px;
-            }
-            QTableWidget::item:selected {
-                background: #2563eb;
-                color: white;
-            }
-            QHeaderView::section {
-                background: #2563eb;
-                color: white;
-                padding: 12px;
-                border: none;
-                font-weight: bold;
-            }
-        """)
-        layout.addWidget(self.table)
-        
-        close_button = AnimatedButton("🚪 Close", "teal")
-        close_button.clicked.connect(self.accept)
-        layout.addWidget(close_button)
-        
-        self.setLayout(layout)
-        self.refresh_table()
-
-    def refresh_table(self):
-        self.table.setRowCount(len(self.data["flashcards"]))
-        for i, card in enumerate(self.data["flashcards"]):
-            self.table.setItem(i, 0, QTableWidgetItem(str(i + 1)))
-            self.table.setItem(i, 1, QTableWidgetItem(card["question"]))
-            self.table.setItem(i, 2, QTableWidgetItem(card["answer"]))
-
-    def add_flashcard(self):
-        dialog = FlashcardDialog(self)
-        if dialog.exec_():
-            question, answer = dialog.get_data()
-            if question and answer:
-                self.data["flashcards"].append({"question": question, "answer": answer})
-                self.parent_app.save_data()
-                self.refresh_table()
-                QMessageBox.information(self, "Success", "Flashcard added successfully!")
-            else:
-                QMessageBox.warning(self, "Error", "Question and answer cannot be empty.")
-
-    def edit_flashcard(self):
-        if not self.data["flashcards"]:
-            QMessageBox.warning(self, "Error", "No flashcards available.")
-            return
-        
-        current_row = self.table.currentRow()
-        if current_row < 0:
-            QMessageBox.warning(self, "Error", "Please select a flashcard to edit.")
-            return
-            
-        card = self.data["flashcards"][current_row]
-        dialog = FlashcardDialog(self, card["question"], card["answer"], edit_mode=True)
-        if dialog.exec_():
-            question, answer = dialog.get_data()
-            if question and answer:
-                self.data["flashcards"][current_row]["question"] = question
-                self.data["flashcards"][current_row]["answer"] = answer
-                self.parent_app.save_data()
-                self.refresh_table()
-                QMessageBox.information(self, "Success", "Flashcard updated successfully!")
-
-    def delete_flashcard(self):
-        if not self.data["flashcards"]:
-            QMessageBox.warning(self, "Error", "No flashcards available.")
-            return
-            
-        current_row = self.table.currentRow()
-        if current_row < 0:
-            QMessageBox.warning(self, "Error", "Please select a flashcard to delete.")
-            return
-            
-        reply = QMessageBox.question(self, "Delete Confirmation",
-                                   "Are you sure you want to delete this flashcard?",
-                                   QMessageBox.Yes | QMessageBox.No)
-        if reply == QMessageBox.Yes:
-            self.data["flashcards"].pop(current_row)
-            self.parent_app.save_data()
-            self.refresh_table()
-            QMessageBox.information(self, "Success", "Flashcard deleted successfully!")
-
 class InstructionsDialog(QDialog):
     """Modern instructions dialog."""
     def __init__(self, parent=None):
@@ -378,6 +178,9 @@ class InstructionsDialog(QDialog):
                     <li><b>➕ Add:</b> Create new flashcards</li>
                     <li><b>✏️ Edit:</b> Update existing flashcards</li>
                     <li><b>🗑️ Delete:</b> Remove flashcards</li>
+                    <li><b>🔍 Search:</b> Filter flashcards by question or answer</li>
+                    <li><b>📤 Export:</b> Save flashcards to a JSON file</li>
+                    <li><b>📥 Import:</b> Load flashcards from a JSON file</li>
                 </ul>
                 <h2 style='color: #16a34a;'>💡 Tips</h2>
                 <ul>
@@ -402,78 +205,6 @@ class InstructionsDialog(QDialog):
         layout.addWidget(ok_button)
         
         self.setLayout(layout)
-
-class FlashcardDialog(QDialog):
-    """Modern flashcard add/edit dialog."""
-    def __init__(self, parent=None, question="", answer="", edit_mode=False):
-        super().__init__(parent)
-        self.setWindowTitle("✏️ Edit Flashcard" if edit_mode else "➕ Add Flashcard")
-        self.setFixedSize(500, 350)
-        layout = QVBoxLayout()
-        layout.setSpacing(12)
-        layout.setContentsMargins(20, 20, 20, 20)
-        
-        title = QLabel("✏️ Edit Flashcard" if edit_mode else "➕ Add Flashcard")
-        title.setFont(QFont("Inter", 16, QFont.Bold))
-        title.setAlignment(Qt.AlignCenter)
-        title.setStyleSheet("color: white; background: #2563eb; padding: 12px; border-radius: 8px;")
-        layout.addWidget(title)
-        
-        q_label = QLabel("📝 Question:")
-        q_label.setStyleSheet("color: #1e293b; font-weight: bold; font-size: 14px;")
-        layout.addWidget(q_label)
-        
-        self.question_input = QLineEdit(question)
-        self.question_input.setPlaceholderText("Enter question...")
-        self.question_input.setStyleSheet("""
-            QLineEdit {
-                padding: 12px;
-                border: 2px solid #d1d9e6;
-                border-radius: 6px;
-                font-size: 14px;
-                background: white;
-            }
-            QLineEdit:focus {
-                border-color: #2563eb;
-                background: #f8fafc;
-            }
-        """)
-        layout.addWidget(self.question_input)
-        
-        a_label = QLabel("✅ Answer:")
-        a_label.setStyleSheet("color: #1e293b; font-weight: bold; font-size: 14px;")
-        layout.addWidget(a_label)
-        
-        self.answer_input = QLineEdit(answer)
-        self.answer_input.setPlaceholderText("Enter answer...")
-        self.answer_input.setStyleSheet("""
-            QLineEdit {
-                padding: 12px;
-                border: 2px solid #16a34a;
-                border-radius: 6px;
-                font-size: 14px;
-                background: white;
-            }
-            QLineEdit:focus {
-                border-color: #15803d;
-                background: #f8fafc;
-            }
-        """)
-        layout.addWidget(self.answer_input)
-        
-        button_layout = QHBoxLayout()
-        self.ok_button = AnimatedButton("💾 Save", "green")
-        self.ok_button.clicked.connect(self.accept)
-        self.cancel_button = AnimatedButton("❌ Cancel", "red")
-        self.cancel_button.clicked.connect(self.reject)
-        button_layout.addWidget(self.ok_button)
-        button_layout.addWidget(self.cancel_button)
-        layout.addLayout(button_layout)
-        
-        self.setLayout(layout)
-    
-    def get_data(self):
-        return self.question_input.text().strip(), self.answer_input.text().strip()
 
 class QuizDialog(QDialog):
     """Modern quiz dialog with animations."""
@@ -556,8 +287,8 @@ class QuizDialog(QDialog):
         """)
         self.layout.addWidget(self.feedback_label)
         
-        if timed:
-            self.timer_label = QLabel(f"⏰ Time left: {time_limit}s")
+        if self.timed:
+            self.timer_label = QLabel(f"⏰ Time left: {self.time_limit}s")
             self.timer_label.setAlignment(Qt.AlignCenter)
             self.timer_label.setStyleSheet("""
                 QLabel {
@@ -663,7 +394,7 @@ class QuizDialog(QDialog):
 
     def show_results(self):
         total = len(self.cards)
-        percentage = (self.correct / total) * 100
+        percentage = (self.correct / total) * 100 if total > 0 else 0
         if percentage >= 80:
             emoji, message = "🏆", "Excellent!"
         elif percentage >= 60:
@@ -724,6 +455,10 @@ class LandingPage(FadeInWidget):
         admin_button = AnimatedButton("🔧 Admin Panel", "purple")
         admin_button.clicked.connect(self.show_admin_login)
         button_layout.addWidget(admin_button)
+        
+        quit_button = AnimatedButton("🚪 Quit", "red")
+        quit_button.clicked.connect(self.parent.close)
+        button_layout.addWidget(quit_button)
         
         layout.addWidget(button_container)
         layout.addStretch()
@@ -936,11 +671,4 @@ class MainContent(FadeInWidget):
         dialog = SettingsDialog(self, self.data)
         if dialog.exec_():
             self.parent.save_data()
-            self.update_stats()
-
-    def show_admin_login(self):
-        login_dialog = AdminLoginDialog(self)
-        if login_dialog.exec_():
-            admin_panel = AdminPanel(self.parent, self.data)
-            admin_panel.exec_()
             self.update_stats()
