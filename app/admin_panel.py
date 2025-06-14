@@ -68,7 +68,7 @@ class AdminPanel(QDialog):
         sort_label = QLabel("Sort by:")
         sort_label.setStyleSheet("color: #1e293b; font-weight: bold; font-size: 14px;")
         self.sort_combo = QComboBox()
-        self.sort_combo.addItems(["Question", "Answer"])
+        self.sort_combo.addItems(["Question", "Answer", "Category"])
         self.sort_combo.setStyleSheet("""
             QComboBox {
                 padding: 8px;
@@ -127,8 +127,8 @@ class AdminPanel(QDialog):
 
         # Table
         self.table = QTableWidget()
-        self.table.setColumnCount(4)
-        self.table.setHorizontalHeaderLabels(["Select", "#", "Question", "Answer"])
+        self.table.setColumnCount(5)
+        self.table.setHorizontalHeaderLabels(["Select", "#", "Question", "Answer", "Category"])
         self.table.horizontalHeader().setStretchLastSection(True)
         self.table.setStyleSheet("""
             QTableWidget {
@@ -182,6 +182,7 @@ class AdminPanel(QDialog):
             self.table.setItem(i, 1, QTableWidgetItem(str(i + 1)))
             self.table.setItem(i, 2, QTableWidgetItem(card["question"]))
             self.table.setItem(i, 3, QTableWidgetItem(card["answer"]))
+            self.table.setItem(i, 4, QTableWidgetItem(card["category"]))
         self.sort_table()
 
     def filter_table(self):
@@ -189,7 +190,7 @@ class AdminPanel(QDialog):
         search_text = self.search_input.text().lower()
         filtered_cards = [
             card for card in self.data["flashcards"]
-            if search_text in card["question"].lower() or search_text in card["answer"].lower()
+            if search_text in card["question"].lower() or search_text in card["answer"].lower() or search_text in card["category"].lower()
         ]
         self.table.setRowCount(len(filtered_cards))
         for i, card in enumerate(filtered_cards):
@@ -200,11 +201,13 @@ class AdminPanel(QDialog):
             self.table.setItem(i, 1, QTableWidgetItem(str(i + 1)))
             self.table.setItem(i, 2, QTableWidgetItem(card["question"]))
             self.table.setItem(i, 3, QTableWidgetItem(card["answer"]))
+            self.table.setItem(i, 4, QTableWidgetItem(card["category"]))
         self.sort_table()
 
     def sort_table(self):
         """Sort table based on selected column and order."""
-        column = self.sort_combo.currentIndex() + 2  # 2 for Question, 3 for Answer
+        column_map = {"Question": 2, "Answer": 3, "Category": 4}
+        column = column_map[self.sort_combo.currentText()]
         self.table.sortItems(column, self.sort_order)
 
     def toggle_sort(self):
@@ -214,16 +217,16 @@ class AdminPanel(QDialog):
 
     def add_flashcard(self):
         """Add a new flashcard."""
-        dialog = FlashcardDialog(self)
+        dialog = FlashcardDialog(self, categories=["General Knowledge", "OOP", "Data Structures", "Mathematics", "Programming"])
         if dialog.exec_():
-            question, answer = dialog.get_data()
-            if question and answer:
-                self.data["flashcards"].append({"question": question, "answer": answer})
+            question, answer, category = dialog.get_data()
+            if question and answer and category:
+                self.data["flashcards"].append({"question": question, "answer": answer, "category": category})
                 self.parent_app.save_data()
                 self.refresh_table()
                 QMessageBox.information(self, "Success", "Flashcard added successfully!")
             else:
-                QMessageBox.warning(self, "Error", "Question and answer cannot be empty.")
+                QMessageBox.warning(self, "Error", "Question, answer, and category cannot be empty.")
 
     def edit_flashcard(self):
         """Edit selected flashcard."""
@@ -239,18 +242,21 @@ class AdminPanel(QDialog):
         # Find original card index
         question = self.table.item(current_row, 2).text()
         answer = self.table.item(current_row, 3).text()
+        category = self.table.item(current_row, 4).text()
         original_index = next((i for i, card in enumerate(self.data["flashcards"])
-                             if card["question"] == question and card["answer"] == answer), None)
+                             if card["question"] == question and card["answer"] == answer and card["category"] == category), None)
         if original_index is None:
             QMessageBox.warning(self, "Error", "Selected flashcard not found in data.")
             return
         card = self.data["flashcards"][original_index]
-        dialog = FlashcardDialog(self, card["question"], card["answer"], edit_mode=True)
+        dialog = FlashcardDialog(self, card["question"], card["answer"], category, edit_mode=True,
+                                categories=["General Knowledge", "OOP", "Data Structures", "Mathematics", "Programming"])
         if dialog.exec_():
-            question, answer = dialog.get_data()
-            if question and answer:
+            question, answer, category = dialog.get_data()
+            if question and answer and category:
                 self.data["flashcards"][original_index]["question"] = question
                 self.data["flashcards"][original_index]["answer"] = answer
+                self.data["flashcards"][original_index]["category"] = category
                 self.parent_app.save_data()
                 self.refresh_table()
                 QMessageBox.information(self, "Success", "Flashcard updated successfully!")
@@ -274,8 +280,9 @@ class AdminPanel(QDialog):
             # Find original card index
             question = self.table.item(current_row, 2).text()
             answer = self.table.item(current_row, 3).text()
+            category = self.table.item(current_row, 4).text()
             original_index = next((i for i, card in enumerate(self.data["flashcards"])
-                                if card["question"] == question and card["answer"] == answer), None)
+                                if card["question"] == question and card["answer"] == answer and card["category"] == category), None)
             if original_index is not None:
                 self.data["flashcards"].pop(original_index)
                 self.parent_app.save_data()
@@ -291,8 +298,9 @@ class AdminPanel(QDialog):
             if self.table.item(row, 0).checkState() == Qt.Checked:
                 question = self.table.item(row, 2).text()
                 answer = self.table.item(row, 3).text()
+                category = self.table.item(row, 4).text()
                 original_index = next((i for i, card in enumerate(self.data["flashcards"])
-                                    if card["question"] == question and card["answer"] == answer), None)
+                                    if card["question"] == question and card["answer"] == answer and card["category"] == category), None)
                 if original_index is not None:
                     selected_indices.append(original_index)
         
@@ -333,7 +341,7 @@ class AdminPanel(QDialog):
                 if not isinstance(imported_cards, list):
                     raise ValueError("Invalid JSON format: Expected a list of flashcards.")
                 for card in imported_cards:
-                    if not (isinstance(card, dict) and "question" in card and "answer" in card):
+                    if not (isinstance(card, dict) and "question" in card and "answer" in card and "category" in card):
                         raise ValueError("Invalid flashcard format.")
                 self.data["flashcards"].extend(imported_cards)
                 self.parent_app.save_data()

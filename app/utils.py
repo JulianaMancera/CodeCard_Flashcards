@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import (
     QPushButton, QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
-    QMessageBox
+    QMessageBox, QComboBox
 )
 from PyQt5.QtCore import Qt, QPropertyAnimation, QEasingCurve, QRect, pyqtProperty
 from PyQt5.QtGui import QFont
@@ -71,10 +71,10 @@ class AnimatedButton(QPushButton):
 
 class FlashcardDialog(QDialog):
     """Modern flashcard add/edit dialog."""
-    def __init__(self, parent=None, question="", answer="", edit_mode=False):
+    def __init__(self, parent=None, question="", answer="", category="", edit_mode=False, categories=None):
         super().__init__(parent)
         self.setWindowTitle("✏️ Edit Flashcard" if edit_mode else "➕ Add Flashcard")
-        self.setFixedSize(500, 350)
+        self.setFixedSize(500, 400)
         layout = QVBoxLayout()
         layout.setSpacing(12)
         layout.setContentsMargins(20, 20, 20, 20)
@@ -127,6 +127,28 @@ class FlashcardDialog(QDialog):
         """)
         layout.addWidget(self.answer_input)
         
+        c_label = QLabel("📌 Category:")
+        c_label.setStyleSheet("color: #1e293b; font-weight: bold; font-size: 14px;")
+        layout.addWidget(c_label)
+        
+        self.category_combo = QComboBox()
+        self.category_combo.addItems(categories or ["General Knowledge", "OOP", "Data Structures", "Mathematics", "Programming"])
+        self.category_combo.setCurrentText(category or "General Knowledge")
+        self.category_combo.setStyleSheet("""
+            QComboBox {
+                padding: 12px;
+                border: 2px solid #d1d9e6;
+                border-radius: 6px;
+                font-size: 14px;
+                background: white;
+            }
+            QComboBox:focus {
+                border-color: #2563eb;
+                background: #f8fafc;
+            }
+        """)
+        layout.addWidget(self.category_combo)
+        
         button_layout = QHBoxLayout()
         self.ok_button = AnimatedButton("💾 Save", "green")
         self.ok_button.clicked.connect(self.accept)
@@ -139,4 +161,4 @@ class FlashcardDialog(QDialog):
         self.setLayout(layout)
     
     def get_data(self):
-        return self.question_input.text().strip(), self.answer_input.text().strip()
+        return (self.question_input.text().strip(), self.answer_input.text().strip(), self.category_combo.currentText())
