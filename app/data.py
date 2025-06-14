@@ -53,9 +53,9 @@ def load_data():
     """Load flashcards and stats from JSON file with error handling."""
     default_data = {
         "flashcards": [
-            {"question": "What is the capital of France?", "answer": "Paris", "category": "General Knowledge"},
-            {"question": "What is 2 + 2?", "answer": "4", "category": "Mathematics"},
-            {"question": "What programming language is this app written in?", "answer": "Python", "category": "Programming"}
+            {"question": "What is the capital of France?", "answer": "Paris"},
+            {"question": "What is 2 + 2?", "answer": "4"},
+            {"question": "What programming language is this app written in?", "answer": "Python"}
         ],
         "stats": {"correct": 0, "total": 0},
         "settings": {"default_time_limit": 10, "auto_save": True, "sound_enabled": True},
@@ -123,7 +123,6 @@ def validate_and_migrate_data(data):
         if isinstance(card, dict) and "question" in card and "answer" in card:
             card["question"] = str(card["question"]).strip()
             card["answer"] = str(card["answer"]).strip()
-            card["category"] = str(card.get("category", "General Knowledge")).strip()
             if card["question"] and card["answer"]:
                 valid_flashcards.append(card)
     data["flashcards"] = valid_flashcards

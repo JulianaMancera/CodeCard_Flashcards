@@ -18,7 +18,7 @@
     ],
     "stats": {
         "correct": 0,
-        "total": 6
+        "total": 3
     },
     "settings": {
         "default_time_limit": 10,
@@ -27,5 +27,5 @@
     },
     "version": "2.1",
     "created": "2025-06-14T23:45:00.717260",
-    "last_modified": "2025-06-14T23:53:14.438169"
+    "last_modified": "2025-06-14T23:52:39.786751"
 }
