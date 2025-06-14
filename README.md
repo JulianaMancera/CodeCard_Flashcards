@@ -24,3 +24,6 @@
 - Follow the on-screen prompts to create, edit, or delete flashcards.
 - Use the "Start Quiz" or "Start Timed Quiz" options to test your knowledge.
 - Refer to the "Instructions" section for detailed guidance.
+
+## Programmer
+© 2025 Juliana Mancera
