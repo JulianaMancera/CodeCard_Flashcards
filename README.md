@@ -11,13 +11,13 @@
 **✅ Instructions** — Access guidelines on how to use the app. <br>
 
 ## Installation
-1. Clone the repository:  
+1. Clone the repository: <br>
    `git clone https://github.com/JulianaMancera/CodeCard_Flashcards.git`
-2. Navigate to the project directory:
+2. Navigate to the project directory: <br>
    `cd CodeCard_Flashcards `
-3. Install dependencies (if applicable):
+3. Install dependencies (if applicable): <br>
    `npm install`
-4. Run the application:
+4. Run the application: <br>
    `npm start` or `python app.py `
 
 ## Usage
